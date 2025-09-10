@@ -1,0 +1,47 @@
+name: compgen2024
+
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  - python
+  - ipython
+  - jupyter
+  # - pip
+
+  - pandas
+  - numpy
+  - scikit-learn
+  - scipy
+  - statsmodels
+
+  - plotly
+  - python-kaleido
+  - dash-bio
+  # - matplotlib
+  # - seaborn
+
+  - bedtools
+#  - pybedtools
+  - biopython
+  - multiqc
+  - fastqc
+  - htslib
+  - salmon
+  - samtools
+  - bcftools
+  - pysam
+  # - prinseq
+  - bwa
+  # - trimmomatic
+  - fastp
+  - igv
+  # - gatk
+  - pydeseq2
+  - plink
+  - sra-tools >= 2.11.3 # for fasterq-dump
+
+  # - pip:
+  #   - spladder # https://github.com/ratschlab/spladder
