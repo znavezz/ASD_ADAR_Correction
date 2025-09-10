@@ -1,3 +1,4 @@
+
 /ADAR1-ASD-RNA-Editing/
 compgen2024.yml
 /ensembl-vep/
@@ -6,14 +7,81 @@ compgen2024.yml
 /additional-info/
 /conda-envs/
 # Ignore everything in the folder
-/extended_variants_table/*
+/extended_variants_table/Flowcharts
+/extended_variants_table/Results
+/extended_variants_table/table_analysis/*
+!/extended_variants_table/table_analysis/varicarta_analysis_copy.ipynb 
+
+/extended_variants_table/.gitignore
+/extended_variants_table/*.csv
+/extended_variants_table/ariel_reproduction.ipynb
+/extended_variants_table/hg19_main.py
+/extended_variants_table/hg19.sh
+/extended_variants_table/LICENSE
+/extended_variants_table/replicate_steps_3_4_get_DNA_RNA.ipynb
+/extended_variants_table/translation_of_r_david_code_analysing_varicarta.ipynb
+/extended_variants_table/tsv2csv.py
+/extended_variants_table/unmapped.txt
+
+
 
 # BUT keep these files tracked
 !/extended_variants_table/instructions_provider.py
 !/extended_variants_table/db.py
 !/extended_variants_table/extended_table.py
-/resources/
+!/extended_variants_table/2nd_run.py
+!/extended_variants_table/hg38_main.py
+!/extended_variants_table/hg38.sh
+
+resources/*
+!/resources/DBs
+/resources/DBs/hg38/validation/*
+!/resources/DBs/hg38/validation/default
+/resources/DBs/hg38/variants/*
+!/resources/DBs/hg38/variants/default
+/resources/DBs/hg38/variants/default/*
+!/resources/DBs/hg38/variants/default/vep_results/
+/resources/DBs/hg38/variants/default/vep_results/*
+!/resources/DBs/hg38/variants/default/vep_results/.gitkeep
+!/resources/DBs/hg38/variants/default/annotations_func.py
+!/resources/DBs/hg38/variants/default/instructions.py
+!/resources/DBs/hg38/variants/default/pre_process.py
+!/resources/DBs/hg38/variants/default/vep_ann.sh
+!/resources/DBs/hg38/variants/liftOverToHg38.sh
+
+/resources/DBs/hg37/validation/*
+!/resources/DBs/hg37/validation/default
+/resources/DBs/hg37/validation/default/__pycache__/
+/resources/DBs/hg37/variants/*
+!/resources/DBs/hg37/variants/default
+/resources/DBs/hg37/variants/default/*
+!/resources/DBs/hg37/variants/default/vep_results/
+/resources/DBs/hg37/variants/default/vep_results/*
+!/resources/DBs/hg37/variants/default/vep_results/.gitkeep
+!/resources/DBs/hg37/variants/default/annotations_func.py
+!/resources/DBs/hg37/variants/default/instructions.py
+!/resources/DBs/hg37/variants/default/pre_process.py
+!/resources/DBs/hg37/variants/default/vep_ann.sh
+
+
+
+# !/resources/DBs
+# !/resources/DBs/hg38_main
+# !/resources/DBs/hg38_main/validation
+# !/resources/DBs/hg38_main/validation/default
+# !/resources/DBs/hg38/validation/default/instructions.py
+# !/resources/DBs/hg38/validation/default/pre_process.py
+# !/resources/DBs/hg38/.liftOver/hg19ToHg38.over.chain.gz
+# !/resources/DBs/hg38/variants/default/instructions.py
+# !/resources/DBs/hg38/variants/default/annotations_func.py
+# !/resources/DBs/hg38/variants/default/pre_process.py
+# !/resources/DBs/hg38/variants/default/vep_ann.sh
+# !/resources/DBs/hg38/variants/liftOverToHg38.sh
+
+
+
 /BE-on-genetic-point-mutations/
 /conda-pkgs/
 /input/               
 /tmp/
+.DS_Store
