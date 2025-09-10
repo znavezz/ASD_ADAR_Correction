@@ -1,0 +1,19 @@
+/ADAR1-ASD-RNA-Editing/
+compgen2024.yml
+/ensembl-vep/
+/plots/
+/vep_snv_nonsyn/
+/additional-info/
+/conda-envs/
+# Ignore everything in the folder
+/extended_variants_table/*
+
+# BUT keep these files tracked
+!/extended_variants_table/instructions_provider.py
+!/extended_variants_table/db.py
+!/extended_variants_table/extended_table.py
+/resources/
+/BE-on-genetic-point-mutations/
+/conda-pkgs/
+/input/               
+/tmp/
