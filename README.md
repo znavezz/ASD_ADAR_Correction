@@ -72,32 +72,50 @@ ASD_ADAR_Correction/
 ## ⚙️ Installation and Setup
 
 ### Requirements
-- Python 3.10+
-- Recommended: Conda or venv
-- For optional annotations:
-  - Ensembl VEP and cache (if using `vep_ann.sh`)
-  - UCSC liftOver (if using `liftOverToHg38.sh`)
+- **Python 3.10.16** (as used in the original analysis)
+- **Docker** (for Ensembl VEP container)
+- **Bedtools v2.31.1** (for reference allele validation)
+- **UCSC liftOver** (for coordinate conversion between GRCh37/hg19 and GRCh38/hg38)
 
-### Python dependencies
-Create a virtual environment and install dependencies:
+### Installation Options
 
+#### Option 1: Use the provided conda environment file
 ```bash
-# conda (example)
-conda create -n ASD_ADAR_env python=3.10 -y
+# Create environment from the provided YAML file
+conda env create -f compgen2024.yml
+conda activate compgen2024
+```
+
+#### Option 2: Manual setup
+```bash
+# Create Python 3.10 environment
+conda create -n ASD_ADAR_env python=3.10.16 -y
 conda activate ASD_ADAR_env
-pip install -r requirements.txt
 
-# or virtualenv
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+# Install core dependencies
+pip install pandas pyfaidx
+
+# Install additional tools
+conda install -c bioconda bedtools ucsc-liftover
 ```
 
-If you plan to run `extended_variants_table/2nd_run.py`, ensure the FASTA indexer is available:
+### External Tools Setup
 
+#### Ensembl VEP (Docker)
 ```bash
-pip install pyfaidx pandas
+# Pull the VEP Docker image (release 113)
+docker pull ensemblorg/ensembl-vep:113
+
+# Download VEP cache for GRCh38 (includes ClinVar April 2024, dbSNP build 156)
+# Follow instructions at: https://www.ensembl.org/info/docs/tools/vep/script/vep_cache.html
 ```
+
+#### UCSC liftOver
+```bash
+# Download chain file for hg19 to hg38 conversion
+wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/liftOver/hg19ToHg38.over.chain.gz
+```
+
 
 ---
 
