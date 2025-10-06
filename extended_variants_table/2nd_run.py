@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-2nd_run.py – append hg38 reference sequence + ADAR/APOBEC flags
-               to a copy of hg38_extended_table.tsv
+2nd_run.py – append genome reference sequence + ADAR/APOBEC flags
+               to a copy of the input TSV file
 
-The updated table is written as 2nd_run.csv in the same directory.
+The updated table is written as 2nd_run.csv in the Results dir in the same parent directory as this script.
 """
 
 import sys
@@ -20,8 +20,10 @@ def check_columns(df: pd.DataFrame, columns: list[str]) -> None:
         raise ValueError(f"Missing columns: {', '.join(missing)}")
 
 
-def add_hg38_column(df: pd.DataFrame, fasta_path: str) -> None:
-    """Add a new column ‘hg38’ with reference bases from *fasta_path*."""
+def add_genome_ref_column(df: pd.DataFrame, fasta_path: str, genome_version: str="hg38") -> None:
+    """Create column hg38 or hg19 in *df* by looking up reference sequence in FASTA."""
+    if genome_version not in ["hg19", "hg38"]:
+        raise ValueError(f"Invalid genome_version: {genome_version}.\n Expected 'hg19' or 'hg38'.")
     check_columns(df, ["chr", "pos", "ref"])
 
     try:
@@ -38,7 +40,8 @@ def add_hg38_column(df: pd.DataFrame, fasta_path: str) -> None:
             raise RuntimeError(f"FASTA lookup failed for {chrom}:{pos}: {e}") from None
         seqs.append(seq)
 
-    df["hg38"] = seqs
+    df[genome_version] = seqs
+
 
 
 def isADARFixable(df: pd.DataFrame) -> None:
@@ -67,9 +70,18 @@ def dbs_count(df: pd.DataFrame) -> None:
 # ────────────────────────── main ────────────────────────────────────────────
 def main() -> None:
     here = os.path.dirname(os.path.abspath(__file__))
-    in_path  = os.path.join(here, "hg38_extended_table.tsv")
-    out_path = os.path.join(here, "2nd_run.csv")
-    fasta_path = os.path.join(here, "..", "resources", "hg38.fa")  # adjust if needed
+    if not (len(sys.argv) == 2 or (len(sys.argv) == 3 and sys.argv[2] in ["hg19", "hg38"])):
+        sys.exit(f"Usage: {sys.argv[0]} [input.tsv [hg19|hg38]]\n"
+                 f"  input.tsv: full path to input file \n"
+                 f"  hg19|hg38: reference genome version (default: hg38)")
+    in_path  = os.path.abspath(sys.argv[1])
+    if len(sys.argv) == 3:
+        genome_version = sys.argv[2]
+    else:
+        genome_version = "hg38"
+    print(f"Using genome version: {genome_version}")
+    out_path = os.path.join(here, "Results/2nd_run.csv")
+    fasta_path = os.path.join(here, "..", "resources", f"{"hg19.fa" if genome_version == "hg19" else "hg38.fa"}")  # adjust if needed
 
     # ── 1. read original table ────────────────────────────────────────────
     try:
@@ -85,8 +97,8 @@ def main() -> None:
     try:
         isADARFixable(df)
         isAPOBECFixable(df)
-        add_hg38_column(df, fasta_path)
-        dbs_count(df)
+        add_genome_ref_column(df, fasta_path, genome_version)
+        # dbs_count(df)
 
     except Exception as e:
         sys.exit(f"❌  Processing failed: {e}")
