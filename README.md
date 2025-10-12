@@ -211,17 +211,6 @@ Key columns you may see:
 
 ---
 
-## 👥 Contact & Citation
-
-- **Nave Zehoray** – [GitHub: znavezz](https://github.com/znavezz)
-- **Oded Wertenschlag** – Contributor
-
-📧 For questions, open an issue in this repository.
-
----
-
-✨ This project brings together **genomics, RNA biology, and bioinformatics** to explore RNA editing as a therapeutic avenue for autism.
-
 ## 🗺️ Pipeline Flow
 
 ```mermaid
@@ -240,5 +229,19 @@ graph TD;
   J --> L[2nd_run.csv];
   K --> L;
 ```
+
+---
+## 👥 Contact & Citation
+
+- **Nave Zehoray** – [GitHub: znavezz](https://github.com/znavezz)
+- **Oded Wertenschlag** – Contributor
+
+📧 For questions, open an issue in this repository.
+
+---
+
+✨ This project brings together **genomics, RNA biology, and bioinformatics** to explore RNA editing as a therapeutic avenue for autism.
+
+
 
 
