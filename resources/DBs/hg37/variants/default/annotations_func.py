@@ -1,6 +1,6 @@
 import gzip
 import io
-import os
+import os, tempfile
 import pandas as pd
 import subprocess
 
@@ -61,74 +61,95 @@ def get_from_extra(key: str, extras: str) -> str:
     return extras_dict.get(key, pd.NA)
 
 
-def vep_annotations(vep_results_path: str, df: pd.DataFrame) -> None:
+def vep_annotations(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Annotate `df` in‑place by adding columns from the VEP output, 
-    merging on ["chr","pos","ref","alt"].  Only rows present in both
-    will be kept.
-
-    Parameters:
-        vep_results_path (str): Path to the VEP file.
-        df (pd.DataFrame): DataFrame to annotate (modified in place).
-
-    Returns:
-        None
+    Run VEP via the shell wrapper and merge the annotations into `df` in-place.
     """
-    # 1) Parse the VEP file exactly as before
+    # ── 1.  dump the DataFrame rows we want VEP to see ──────────────────────
+    cur_dir  = os.path.dirname(os.path.abspath(__file__))
+    # unique TEMP **input** file
+    with tempfile.NamedTemporaryFile(
+            dir=cur_dir, suffix=".tsv", delete=False, mode="w") as fh:
+        df.to_csv(fh.name, sep="\t", index=False, header=False)
+        tmp_path = fh.name
+
+    # unique **output** file inside ./vep_results
+    out_dir = os.path.join(cur_dir, "vep_results")
+    os.makedirs(out_dir, exist_ok=True)
+    out_fh  = tempfile.NamedTemporaryFile(dir=out_dir,
+                                          prefix="vep_",
+                                          suffix=".txt",
+                                          delete=False)
+    out_fh.close()
+    out_path = out_fh.name
+
+    vep_script = os.path.join(cur_dir, "vep_ann.sh")
+    if not os.path.exists(vep_script):
+        raise FileNotFoundError(f"VEP script not found: {vep_script}")
+
+    # ── 2.  run the wrapper and capture ONLY its stdout (the results path) ──
+    try:
+        completed = subprocess.run(
+            ["bash", vep_script, tmp_path, out_path],
+            check=True, capture_output=True, text=True
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            f"VEP wrapper failed (exit {e.returncode}).\nSTDERR:\n{e.stderr}"
+        ) from None
+    finally:
+        if os.path.isfile(tmp_path):
+            # clean up temp input file if it exists
+            # (it may not if the script failed before writing it)
+            print(f"Removing temporary input file: {tmp_path}")
+            # this is a temp file, so we can safely remove it
+            os.remove(tmp_path)          # clean up temp input no matter what
+
+    vep_results_path = completed.stdout.strip()   # wrapper echoes path
+    if not os.path.isfile(vep_results_path):
+        raise RuntimeError(
+            f"VEP finished but results file not found: {vep_results_path}"
+        )
+
+    print(f"✓ VEP results: {vep_results_path}")
+
+    # ── 3.  parse VEP output ------------------------------------------------
     vep_df = upload_vep_results_file(vep_results_path)
 
-    # 2) Pull out the extras into their own columns
-    keys_from_extras = [
-        "STRAND", "VARIANT_CLASS", "SYMBOL", "SYMBOL_SOURCE",
-        "SIFT", "PHENO", "PolyPhen", "HGVSc", "HGVSp", "PhastCons46", "SWISSPROT", "UNIPARC", "EXON", "IMPACT"
-    ]
-    for key in keys_from_extras:
-        vep_df[key] = vep_df["Extra"].apply(lambda x: get_from_extra(key, x))
-    vep_df.drop(columns=["Extra"], inplace=True)
-
-    # 3) Ensure join‐keys are strings in both frames
-    # normalize types & whitespace
-    for col in ["chr","pos","ref","alt"]:
-        df[col]   = df[col].astype(str).str.strip()
-        vep_df[col]= vep_df[col].astype(str).str.strip()
-
-    # find which input keys have no match in VEP
-    in_keys  = set(df.set_index(["chr","pos","ref","alt"]).index)
-    out_keys = set(vep_df.set_index(["chr","pos","ref","alt"]).index)
-
-    missing = in_keys - out_keys
-    print(f"{len(missing)} variants in your input never appeared in VEP output.")
-    print(list(missing)[:10])
-
-    # Check duplicates in your original df
-    dups_in_df = df.duplicated(subset=["chr","pos","ref","alt"]).sum()
-    print(f"Duplicates in input df: {dups_in_df}")
-
-    # Check duplicates in your VEP output
-    dups_in_vep = vep_df.duplicated(subset=["chr","pos","ref","alt"]).sum()
-    print(f"Duplicates in VEP df: {dups_in_vep}")
-
-
-
-    # 4) Inner merge to keep only matching rows
-    merged = df.merge(
-        vep_df,
-        on=["chr","pos","ref","alt"],
-        how="inner",
-        sort=False
+    # ── 4.  NEW: split the `Extra` column into all its individual tags ──────
+    extras_wide = (
+        vep_df["Extra"]
+        .str.split(';').explode()
+        .str.split('=', n=1, expand=True)
+        .rename(columns={0: "key", 1: "value"})
+        .reset_index()                               # <─ keeps original row-index in a column
+        .pivot_table(
+            index="index",                           # group by that saved index
+            columns="key",
+            values="value",
+            aggfunc="first"
+        )
     )
-    print(f"VEP annotations: {len(merged)} rows after merge")
-    print(f"VEP annotations: {len(vep_df)} rows in VEP file")
-    print(f"VEP annotations: {len(df)} rows in input DataFrame")
-    print(f"VEP annotations: {len(merged) / len(df):.2%} of input rows matched")
-    print(f"VEP annotations: {len(merged) / len(vep_df):.2%} of VEP rows matched")
 
-    # 5) In‑place mutation: clear out old df, then refill from merged
-    df.drop(df.index, inplace=True)
-    for col in merged.columns:
-        df[col] = merged[col].values
+    vep_df = vep_df.drop(columns=["Extra"]).join(extras_wide)
 
-    # now `df` contains exactly the inner‑merged table
+    # ── 5.  merge VEP data back into the caller's DataFrame ─────────────────
+    KEYS = ["chr", "pos", "ref", "alt"]
+
+    # ensure the join keys are clean strings on both sides
+    for c in KEYS:
+        df[c]     = df[c].astype(str).str.strip()
+        vep_df[c] = vep_df[c].astype(str).str.strip()
+
+    # merged = df.merge(vep_df, on=KEYS, how="inner", sort=False)
+
+    # # in-place replace df with the merged content
+    # df.drop(df.index, inplace=True)
+    # df[merged.columns] = merged
+    merged = df.merge(vep_df, on=KEYS, how="inner", sort=False)
+
+    # hand back a fresh, consolidated frame ─ no fragmentation
+    return merged.copy()
 
 
 
