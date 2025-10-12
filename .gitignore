@@ -10,6 +10,9 @@
 /extended_variants_table/Results
 /extended_variants_table/table_analysis/*
 !/extended_variants_table/table_analysis/varicarta_analysis_copy.ipynb 
+!/extended_variants_table/table_analysis/add_GTEx.ipynb
+!/extended_variants_table/table_analysis/add_neighbors.ipynb
+!/extended_variants_table/table_analysis/add_sfari.ipynb
 
 /extended_variants_table/.gitignore
 /extended_variants_table/*.csv
